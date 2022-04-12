@@ -1,3 +1,10 @@
+alias gc="git checkout"
+alias ga="git add"
+alias gs="git status"
+alias tf="terraform"
+
+alias bored="nmap -Pn -sS -p 80 -iR 0 --open"
+
 alias battery="upower -i `upower -e | grep 'BAT'`"
 
 alias bombard="docker run -ti --rm alpine/bombardier -c 1000 -d 3600s -l $1"
