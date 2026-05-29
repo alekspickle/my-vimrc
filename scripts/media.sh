@@ -5,26 +5,98 @@
 # insrt/replace audio for a video with an offset
 # insert audio with 500ms delay: media-merge video.mp4 audio.mp4 00:00:00.500
 media-merge(){
-    local video audio offset
+    local video audio offset out
     video=$1
     audio=$2
     offset=${3:-"00:00:00.000"}
+    out=${4:-"merged.mp4"}
 
     # set offset for any of the inputs + or - sets it ahead or behind
     # -itsoffset <+-00:00:00.000> -i <Input>
     # map first(0) stream video to first(0) out, and second(1) audio stream to first(0)
     # -map 0:v:0  -map 1:a:0
     # -c:v copy copy video stream
-    ffmpeg -i "$video" -itsoffset "$offset" -i "$audio" -c:v copy -map 0:v:0 -map 1:a:0 merged.mp4
+    ffmpeg -i "$video" -itsoffset "$offset" -i "$audio" -c:v copy -map 0:v:0 -map 1:a:0 "$out"
 }
 
-video-merge(){
-    local ext
-    ext=${1:-"mp4"}
-    for f in *."$ext"; do
+respeed() {
+    # Respeed video+audio: mul>1 slower, mul<1 faster
+    # respeed output.mkv output_slow.mkv 3
+
+    local in="$1" out="$2" mul="$3"
+    [[ -z "$mul" ]] && { echo "Usage: respeed <input> <output> <multiplier>"; return 1; }
+    local rate=$(bc -l <<< "1/$mul")
+
+    # Chain atempo for values outside [0.5, 2.0]
+    local af=""; local r=$rate
+    while (( $(bc -l <<< "$r < 0.5") )); do af+="atempo=0.5,"; r=$(bc -l <<< "$r / 0.5"); done
+    while (( $(bc -l <<< "$r > 2.0") )); do af+="atempo=2.0,"; r=$(bc -l <<< "$r / 2.0"); done
+    af+="atempo=$r"
+
+    ffmpeg -i "$in" -filter:v "setpts=${mul}*PTS" -af "$af" "$out"
+}
+
+
+
+vid-vstack(){
+    local v1 v2 out
+    v1=$1
+    v2=$2
+    out=${3:-"output.mp4"}
+    ffmpeg -i "$v1" -i "$v2" -filter_complex \
+        "[1:v]scale2ref[1r][0r];[0r][1r]vstack" -c:a copy "$out"
+}
+
+vid-hstack(){
+    local v1 v2 out
+    v1=$1
+    v2=$2
+    out=${3:-"output.mp4"}
+    ffmpeg -i "$v1" -i "$v2" -filter_complex \
+        "[1:v]scale2ref[1r][0r];[0r][1r]hstack" -c:a copy "$out"
+}
+
+
+
+# vid-merge '*.mp4' [output]  — glob pattern (quote it!)
+# vid-merge file1 file2 ... output  — explicit file list
+vid-merge(){
+    local pattern out
+    local files=()
+
+    if [[ $1 == *[*?[]* ]]; then
+        pattern=$1
+        out=${2:-"concat.mp4"}
+        while IFS= read -r f; do
+            files+=("$f")
+        done < <(find . -maxdepth 1 -type f -name "$pattern" 2>/dev/null | sed 's|^\./||' | sort)
+    else
+        out="${@: -1}"
+        local rest=("${@:1:$#-1}")
+        for f in "${rest[@]}"; do
+            [ -f "$f" ] && files+=("$f")
+        done
+    fi
+
+    if [ ${#files[@]} -eq 0 ]; then
+        echo "no files to merge"
+        return 1
+    fi
+    printf '%s\n' "${files[@]}" | while IFS= read -r f; do
         printf "file '%s'\n" "$f"
     done > list.txt
-    ffmpeg -f concat -safe 0 -i list.txt -c:v libx264 -c:a aac output.mp4
+    ffmpeg -f concat -safe 0 -i list.txt -c:v libx264 -c:a aac "$out"
+    echo "$out"
+}
+
+# vid-scale input.mp4 1280:720 [output]  — scale video to given dimensions
+# vid-scale input.mp4 50% [output]  — scale by percentage
+vid-scale(){
+    local in scale out
+    in=${1:?"usage: vid-scale <input> <scale> [output]"}
+    scale=$2
+    out=${3:-"${in%.*}_scaled.${in##*.}"}
+    ffmpeg -y -i "$in" -vf "scale=$scale" "$out"
 }
 
 
@@ -32,7 +104,7 @@ video-merge(){
 # when setting up the access to anyone with  the link, extract
 # the file id from the link: drive.google.com/file/d/<file_id>/...
 download-from-google(){
-    local FILE_ID,out
+    local FILE_ID out
     FILE_ID=$1
     out=${2:-"google-download-output"}
 
@@ -49,7 +121,7 @@ download-from-google(){
 to-pdf(){
     local in
     in=$1
-    libreoffice --headless --convert-to pdf $in
+    libreoffice --headless --convert-to pdf "$in"
 }
 
 # convert all files in directory in one pdf with pwd as name
@@ -214,7 +286,7 @@ gifify() {
                 ;;
             -*) # unknown option
                 echo "Unknown option: $1" >&2
-                return 0
+                return 1
                 ;;
             *)  # positional input
                 if [ -z "$input" ]; then
@@ -355,7 +427,7 @@ format-track() {
     # Default if not present
     if [ -z "$input" ]; then
         echo "specify input file"
-        return 0
+        return 1
     fi
 
     cmd=(ffmpeg -y -loglevel warning -i "$input")
@@ -440,18 +512,55 @@ format-track() {
         #     "${output}"
     }
 
+# frames-to-vid 'frame-*.png' [output.mp4] -r 30
+frames-to-vid() {
+    local pattern output framerate
+    pattern=${1:?"usage: frames-to-vid <glob-pattern> [output] [-r fps]"}
+    output="${2:-output.mp4}"
+    framerate=30
+    shift
+    [[ $# -gt 0 && "${1:0:1}" != "-" ]] && shift
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            -r) framerate="$2"; shift 2 ;;
+            *)  echo "Unknown: $1"; return 1 ;;
+        esac
+    done
+    ffmpeg -y -framerate "$framerate" -f image2 -pattern_type glob -i "$pattern" -c:v libx264 -pix_fmt yuv420p "$output"
+}
+
 # to-yt track.mp3 cover.jpg
 to-yt() {
-    local out in
-    in=${1:-"input.mp3"}
-    out="${1%.*}"
+    local audio cover out
+    audio=${1:?"usage: to-yt <audio> <cover-image>"}
+    cover=${2:?"usage: to-yt <audio> <cover-image>"}
+    out="${audio%.*}.mp4"
 
-    ffmpeg -y -i "$in" \
-        -map 0:a -map 0:v \
+    ffmpeg -y -loop 1 -i "$cover" -i "$audio" \
+        -map 0:v -map 1:a \
+        -c:v libx264 -tune stillimage -vf "scale=1280:-1:force_original_aspect_ratio=decrease" \
         -c:a aac -b:a 192k \
-        -c:v libx264 -tune stillimage \
-        -vf "fps=2,scale=1280:-1:force_original_aspect_ratio=decrease" \
-        -shortest "$out.mp4"
-    # ffmpeg -y -i $1 -c:a copy -shortest -c:v libx264 "$out.mp4"
+        -shortest "$out"
+}
+
+# to-mp4 input.mkv
+to-mp4() {
+    local input out
+    input=${1:?"usage: to-mp4 <video>"}
+    out="${input%.*}.mp4"
+
+    ffmpeg -y -i "$input" \
+        -c:v libx264 -pix_fmt yuv420p \
+        -c:a aac -b:a 192k \
+        "$out"
+}
+
+# to-webp input.png
+to-webp() {
+    local in out
+    in=${1:?"usage: to-webp <image>"}
+    out="${in%.*}.webp"
+
+    ffmpeg -y -i "$in" "$out"
 }
 

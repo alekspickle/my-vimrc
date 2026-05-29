@@ -19,12 +19,18 @@ docker-in() {
     docker exec -it "$1" /bin/bash
 }
 
+docker-arch(){
+    local img_name
+    img_name=${1:-"my-image"}
+    docker image inspect "$img_name" --format '{{.Architecture}}'
+}
+
 clean-rust () {
     local days
     days=${1:-7}
 
     find . -type d -mtime +"$days" -name target -exec rm -rf {} + \
-        -o -type f -name Cargo.lock -exec rm -f {} +
+    -o -type f -name Cargo.lock -exec rm -f {} +
 }
 
 # check LAN cable for all network interfaces
@@ -32,6 +38,15 @@ check-lan() {
     for interface in /sys/class/net/*; do
         echo "$interface: carrier $(cat "$interface/carrier"), operstate $(cat "$interface/operstate")"
     done
+}
+
+agent(){
+    if [ -z "${1:-}" ]; then
+        opencode
+    else
+        # nono run --profile agent -- opencode "$session"
+        opencode -s "$1"
+    fi
 }
 
 # # execute command forever with timeout
@@ -72,6 +87,23 @@ local-ip(){
 # gobuster password authentication examples
 gobust() {
     gobuster -e -u "$1" -w wordlist
+}
+
+rsync_() {
+    local COMMON_EXCLUDES
+    COMMON_EXCLUDES=(
+    "--exclude" "*Camera*"
+    "--exclude" "*target*"
+    "--exclude" "*logs*"
+    "--exclude" "*venv*"
+    "--exclude" "*mypy_cache*"
+    "--exclude" "*node_modules*"
+    "--exclude" "*build*"
+    "--exclude" "*gdc*"
+    "--exclude" "*fort*"
+    "--exclude" "*godot*"
+)
+    sudo rsync -avzh --delete "$@" "${COMMON_EXCLUDES[@]}"
 }
 
 # NMAP
@@ -160,10 +192,10 @@ sup() {
 
     ps -p "$pids" -o pid=,rss=,pcpu= | awk '
     {mem+=$2; cpu+=$3}
-END {
+    END {
     printf "Memory: %.2f MB\n", mem/1024
     printf "CPU: %.2f%%\n", cpu
-}'
+    }'
 }
 
 # wargames <user>
@@ -203,9 +235,9 @@ git-rm-files-from-history() {
         echo
         echo "Largest blobs in history (for reference):"
         git rev-list --objects --all \
-            | git cat-file --batch-check='%(objecttype) %(objectname) %(objectsize) %(rest)' \
-            | awk '$1=="blob" {print $3 "\t" $4}' \
-            | sort -rn | head
+        | git cat-file --batch-check='%(objecttype) %(objectname) %(objectsize) %(rest)' \
+        | awk '$1=="blob" {print $3 "\t" $4}' \
+        | sort -rn | head
         return 1
     fi
 
@@ -219,10 +251,10 @@ git-rm-files-from-history() {
         y|Y)
             echo "Removing '$git_path' from git history..."
             git filter-branch --force \
-                --index-filter "git rm --cached --ignore-unmatch '$git_path'" \
-                --prune-empty \
-                --tag-name-filter cat \
-                -- --all
+            --index-filter "git rm --cached --ignore-unmatch '$git_path'" \
+            --prune-empty \
+            --tag-name-filter cat \
+            -- --all
             echo
             echo "✅ Done."
             echo "Next steps:"
@@ -293,30 +325,30 @@ prefix-all(){
 
     find . -name "$patt" -type f -print0 -exec bash -c '
     normalize() {
-        local normalize_name prefix temp
+    local normalize_name prefix temp
 
-        prefix=${2:-""}
-        normalize_name=$(basename "$1")
-        temp="$prefix$(echo "$normalize_name" | tr "[:upper:]" "[:lower:]" | \
-            sed "s/ \[[^]]*\]//g" | \
-            sed "s/[＂\"]\|[＂\"]//g" | \
-            sed "s/\.-\| \./-/g" | \
-            sed "s/ /-/g" | \
-            sed "s/---/-/g; s/--/-/g" | \
-            sed "s/-–-/-/g" | \
-            sed "s/--/-/g" | \
-            sed "s/_/-/g" | \
-            sed "s/,-/-/g")"
+    prefix=${2:-""}
+    normalize_name=$(basename "$1")
+    temp="$prefix$(echo "$normalize_name" | tr "[:upper:]" "[:lower:]" | \
+    sed "s/ \[[^]]*\]//g" | \
+    sed "s/[＂\"]\|[＂\"]//g" | \
+    sed "s/\.-\| \./-/g" | \
+    sed "s/ /-/g" | \
+    sed "s/---/-/g; s/--/-/g" | \
+    sed "s/-–-/-/g" | \
+    sed "s/--/-/g" | \
+    sed "s/_/-/g" | \
+    sed "s/,-/-/g")"
 
-        echo "$temp"
+    echo "$temp"
 
     }
 
-new=$(normalize "$0" "$1")
-mv -v "$0" "$new"' {} "$prefix" \;
+    new=$(normalize "$0" "$1")
+    mv -v "$0" "$new"' {} "$prefix" \;
 
-# will create a lot of empty directories
-find . -type d -print0 -empty -delete
+    # will create a lot of empty directories
+    find . -type d -print0 -empty -delete
 }
 
 # dumb screen tracker exploit for soulless corporate jobs I used to use as as a junior
