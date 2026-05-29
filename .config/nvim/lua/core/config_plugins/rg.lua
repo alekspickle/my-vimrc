@@ -19,7 +19,7 @@ local opts = {
     syncLocations = '<leader>o',
     close = '',
     -- normal mode only
-    gotoLocation = '<enter>',
+    gotoLocation = '<leader>l',
   },
 
   -- separator between inputs and results, default depends on nerdfont

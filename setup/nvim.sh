@@ -12,9 +12,17 @@ if [ -d "/squashfs-root" ]; then
    rm /usr/bin/nvim
 fi
 
+ARCH=$(uname -m)
+case "$ARCH" in
+    x86_64)  NVIM_ARCH="x86_64" ;;
+    aarch64) NVIM_ARCH="arm64" ;;
+    armv7l)  NVIM_ARCH="armv7l" ;;
+    *)       echo "Unsupported architecture: $ARCH"; exit 1 ;;
+esac
+
 if [ ! -f "nvim.appimage" ]; then
-    echo "Downloading nvim.appimage..."
-    curl -sL -o nvim.appimage https://github.com/neovim/neovim/releases/latest/download/nvim-linux-x86_64.appimage
+    echo "Downloading nvim.appimage ($NVIM_ARCH)..."
+    curl -sL -o nvim.appimage "https://github.com/neovim/neovim/releases/latest/download/nvim-linux-${NVIM_ARCH}.appimage"
     chmod u+x nvim.appimage
 fi
 
@@ -26,7 +34,7 @@ sudo mv squashfs-root /
 sudo ln -s /squashfs-root/AppRun /usr/bin/nvim
 
 # Optional: add nvim to default editors if not present
-if ! sudo update-alternatives --list editor 2>/dev/null | rg -q nvim; then
+if ! sudo update-alternatives --list editor 2>/dev/null | grep -q nvim; then
     sudo update-alternatives --install /usr/bin/editor editor /usr/bin/nvim 100
 fi
 
