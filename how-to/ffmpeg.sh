@@ -108,3 +108,17 @@ ffmpeg -i "concat:in1.mp3|in2.mp3|in3.mp3" -acodec copy out.mp3
 # -map 0:v:0  -map 1:a:0
 # -c:v copy copy video stream
 ffmpeg -i in_video.mp4 -itsoffset -00:00:00.500 -i in_audio.wav -c:v copy -map 0:v:0 -map 1:a:0 out.mp4
+
+# collage vertically video from frames
+ffmpeg -framerate 30 \
+    -pattern_type glob -i 'frame-*-1.png' \
+    -pattern_type glob -i 'frame-*-2.png' \
+    -filter_complex vstack \
+    -c:v libx264 bg_laser.mp4
+
+# cat frame*.raw video frames to video
+cat $(ls frame_*.raw | sort -t_ -k3 -k5) > all.raw
+ffmpeg -f rawvideo \
+    -pix_fmt gray -s 1456x1088 -framerate 60 \
+    -i all.raw -c:v libx264 -pix_fmt yuv420p bg.mp4
+

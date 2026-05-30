@@ -13,6 +13,7 @@ alias dx-serve='BEVY_ASSET_ROOT=. dx serve --hot-patch'
 # network
 alias myip="curl http://ipecho.net/plain; echo"
 alias zerotier="sudo zerotier-cli"
+alias cf="cloudflared"
 
 # ffmpeg
 alias ffmpeg='ffmpeg -hide_banner'
@@ -42,7 +43,6 @@ alias zjs="zj attach simple || zj -s simple -n simple"
 alias zjl="zj attach lmms || zj -s lmms -n lmms"
 alias zja="zj attach ardour || zj -s ardour -n ardour"
 
-alias agent="opencode"
 alias vim="nvim"
 alias vi="nvim"
 alias python='python3'

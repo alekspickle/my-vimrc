@@ -49,6 +49,8 @@ keybinds {
     }
     tab {
         bind "Ctrl t" { SwitchToMode "Normal"; }
+        bind "Ctrl l" { MoveTab "Right"; }
+        bind "Ctrl h" { MoveTab "Left"; }
         bind "r" { SwitchToMode "RenameTab"; TabNameInput 0; }
         bind "h" "Left" "Up" "k" { GoToPreviousTab; }
         bind "l" "Right" "Down" "j" { GoToNextTab; }
@@ -195,12 +197,17 @@ keybinds {
         //     }
         // }
 
-        bind "Alt m" {
-            LaunchPlugin "file:~/.config/zellij/plugins/monocle.wasm" {
+        bind "Alt c" {
+            LaunchOrFocusPlugin "zj-hooker" {
                 floating true
             };
-            SwitchToMode "Normal"
         }
+        // bind "Alt m" {
+        //     LaunchPlugin "file:~/.config/zellij/plugins/monocle.wasm" {
+        //         floating true
+        //     };
+        //     SwitchToMode "Normal"
+        // }
     }
     shared_except "normal" "locked" {
         bind "Enter" "Esc" { SwitchToMode "Normal"; }
@@ -245,8 +252,8 @@ plugins {
     about location="zellij:about"
 
     zj-hooker location="file:/home/pickle/.config/zellij/plugins/zj-hooker.wasm" {
-        on_attach "file:/home/pickle/.zjoin.sh"
-        on_detach "file:/home/pickle/.zleave.sh"
+        on_attach "file:/home/pickle/.attach.sh"
+        on_detach "file:/home/pickle/.detach.sh"
         pattern "fort"
     }
 
