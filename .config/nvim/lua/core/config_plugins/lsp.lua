@@ -41,9 +41,13 @@ vim.api.nvim_create_autocmd('LspAttach', {
 })
 
 vim.diagnostic.config({
+    severity_sort = true,
+    update_in_insert = false,
     virtual_text = true,
     signs = true,
+    jump = {float = true},
     float = {
+        source = 'if_many',
         scope = 'buffer',
     }
 })

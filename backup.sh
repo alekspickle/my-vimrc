@@ -3,36 +3,21 @@
 set -e
 
 HOME=${HOME:-/home/pickle}
+source "$(dirname "$0")/scripts/utils.sh"
 
 BACKUP_DIR="/var/backups"
 CFG_DIR="$HOME/.config"
 DOT_DIR="$HOME/Documents/dotfiles"
-COMMON_EXCLUDES=(
-    "--exclude" "*Camera*"
-    "--exclude" "*target*"
-    "--exclude" "*logs*"
-    "--exclude" "*venv*"
-    "--exclude" "*mypy_cache*"
-    "--exclude" "*node_modules*"
-    "--exclude" "*build*"
-    "--exclude" "*gdc*"
-    "--exclude" "*fort*"
-    "--exclude" "*godot*"
-)
-
-rsync_() {
-    sudo rsync -avzh --delete "$@" "${COMMON_EXCLUDES[@]}"
-}
 
 rsync_ "$HOME"/.local/share/fonts "$HOME"/Documents
 # backup most of the data
-rsync_ "$HOME/Documents/" "$BACKUP_DIR/Documents/"
-rsync_ "$HOME/Pictures/" "$BACKUP_DIR/Pictures/"
-rsync_ "$HOME/Downloads/" "$BACKUP_DIR/Downloads/" --max-size=100M
-rsync_ "$HOME/Videos/" "$BACKUP_DIR/Videos/"
-rsync_ "$HOME/Music/" "$BACKUP_DIR/Music/" --max-size=300M
-rsync_ "$HOME/Sound/" "$BACKUP_DIR/Sound/"
-rsync_ "$HOME/Games/" "$BACKUP_DIR/Games/"
+rsync_ "$HOME/Documents/" "$BACKUP_DIR/Documents" --exclude ".git"
+rsync_ "$HOME/Pictures/" "$BACKUP_DIR/Pictures"
+rsync_ "$HOME/Downloads/" "$BACKUP_DIR/Downloads" --max-size=100M
+rsync_ "$HOME/Videos/" "$BACKUP_DIR/Videos"
+rsync_ "$HOME/Music/" "$BACKUP_DIR/Music" --max-size=300M
+rsync_ "$HOME/Sound/" "$BACKUP_DIR/Sound"
+rsync_ "$HOME/Games/" "$BACKUP_DIR/Games"
 
 # dotfiles
 nvim_sync=("$HOME/Documents/dotfiles/setup/nvim.sh" "--sync")

@@ -98,10 +98,11 @@ rsync_() {
     "--exclude" "*venv*"
     "--exclude" "*mypy_cache*"
     "--exclude" "*node_modules*"
-    "--exclude" "*build*"
+    "--exclude" "*-build*"
     "--exclude" "*gdc*"
     "--exclude" "*fort*"
     "--exclude" "*godot*"
+    "--exclude" "pi-linux"
 )
     sudo rsync -avzh --delete "$@" "${COMMON_EXCLUDES[@]}"
 }
@@ -146,13 +147,32 @@ biggest-dirs(){
 # create install USB from ISO
 # burn-usb-iso /dev/sdb /path/to/my.iso
 burn-usb-iso() {
-    local iso disk
+    local disk iso
     disk=$1
     iso=$2
 
+    if [[ $# -ne 2 ]]; then
+        echo "Usage: burn-usb-iso <device> <iso>" >&2
+        return 1
+    fi
+
+    if [[ ! -f "$iso" ]]; then
+        echo "ISO not found: $iso" >&2
+        return 1
+    fi
+
+    if [[ ! -b "$disk" ]]; then
+        echo "Not a block device: $disk" >&2
+        return 1
+    fi
+
+    echo "WARNING: This will wipe $disk"
+    read -r "?Type YES to continue: " confirm
+    [[ "$confirm" == "YES" ]] || return 1
+
     (
         set -x
-        sudo dd if="$iso" of="$disk" bs=8M
+        sudo dd if="$iso" of="$disk" bs=4M status=progress conv=fsync
     )
 }
 
