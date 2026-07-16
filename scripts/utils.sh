@@ -100,9 +100,9 @@ rsync_() {
     "--exclude" "*node_modules*"
     "--exclude" "*-build*"
     "--exclude" "*gdc*"
-    "--exclude" "*fort*"
+    "--exclude" "*bb*"
     "--exclude" "*godot*"
-    "--exclude" "pi-linux"
+    "--exclude" "*pi-linux*"
 )
     sudo rsync -avzh --delete "$@" "${COMMON_EXCLUDES[@]}"
 }

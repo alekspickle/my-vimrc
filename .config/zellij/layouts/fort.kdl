@@ -8,14 +8,23 @@ layout {
     // ☍ ♅ ♆ ꐠꆛ
 
     tab name="♅ main" cwd="~/" {
+        floating_panes {
+            pane cwd="~/" {
+                x "70%"
+                y "5%"
+                width "30%"
+                height "40%"
+                plugin location="zj-hooker"
+            }
+        }
         pane
     }
 
-    tab name="♆ rusting" cwd="~/Documents/fort"  {
+    tab name="♆ rusting" cwd="~/Documents/bav"  {
         pane
     }
 
-    tab name="☍ dev" cwd="~/Documents/fort" focus=true {
+    tab name="☍ dev" cwd="~/Documents/bav" focus=true {
         pane
     }
 
@@ -25,6 +34,6 @@ layout {
     }
 
     tab name="btop"  {
-            pane command="btop"
+        pane command="btop"
     }
 }
