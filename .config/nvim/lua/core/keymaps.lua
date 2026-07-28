@@ -46,13 +46,11 @@ map('n', '<Leader>a', ':wqa<cr>', { desc = "save and quit all" })
 
 map('n', '<leader>i', "gg=G''<cr>", m(defaults, { desc = "indent file"}))
 
--- highlight the current line
+-- highlight the line under the cursor
 map('n', '<Leader>cc', ':set cursorline!<cr>', { desc = "toggle hl current line" })
+
 -- use U for redo :))
 map('n', 'U', '<C-r>', {})
-
--- lazy deps managing panel (disabled - using vim.pack now)
--- map("n", "<leader>l", "<cmd>Lazy<cr>", { desc = "Lazy" })
 
 -- Resize window using <ctrl> arrow keys
 map("n", "<C-Up>", "<cmd>resize +2<cr>", { desc = "Increase Window Height" })
@@ -121,6 +119,12 @@ map("n", "]e", diagnostic_goto(true, "ERROR"), { desc = "Next Error" })
 map("n", "[e", diagnostic_goto(false, "ERROR"), { desc = "Prev Error" })
 map("n", "]w", diagnostic_goto(true, "WARN"), { desc = "Next Warning" })
 map("n", "[w", diagnostic_goto(false, "WARN"), { desc = "Prev Warning" })
+map("n", "<leader>t", vim.diagnostic.open_float, { desc = "show diagnostics" })
+
+-- update plugins, show report buffer (which updated/broke)
+map('n', '<leader>pu', function()
+    vim.pack.update()
+end, { desc = "Pack: update plugins" })
 
 
 -- clear all notify windows on Esc

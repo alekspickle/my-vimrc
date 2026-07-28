@@ -9,6 +9,7 @@ alias firefox="flatpak run --branch=stable --arch=x86_64 --command=firefox --fil
 alias restart-pipewire='systemctl --user restart pipewire.socket pipewire-pulse.socket wireplumber.service'
 alias update-all='sh ~/Documents/dotfiles/update.sh'
 alias dx-serve='BEVY_ASSET_ROOT=. dx serve --hot-patch'
+alias eur-usd='curl -s https://api.frankfurter.dev/v2/rate/EUR/USD | jq .rate'
 
 # network
 alias myip="curl http://ipecho.net/plain; echo"
@@ -57,6 +58,7 @@ alias git-armageddon="git push --force --branches --prune"
 
 # alias bored="nmap -Pn -sS -p 80 -iR 0 --open"
 alias battery="upower -i $(upower -e | grep 'BAT')"
+alias disk="df -h | rg dm-0"
 alias bombard="docker run -ti --rm alpine/bombardier -c 1000 -d 3600s -l $1"
 
 #musl

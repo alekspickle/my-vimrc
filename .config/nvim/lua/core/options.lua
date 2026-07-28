@@ -89,7 +89,5 @@ o.tabstop = 4       -- insert 4 spaces for a tab
 vim.api.nvim_create_autocmd('TextYankPost', {
     desc = 'Highlight the text that is being yanked',
     group = vim.api.nvim_create_augroup('kikstart-highlight-yank', {clear = true}),
-    callback = function()
-        vim.hl.on_yank()
-    end,
+    callback = function() vim.hl.on_yank() end,
 })

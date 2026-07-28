@@ -33,6 +33,7 @@ local plugins = {
         src = 'nvim-treesitter/nvim-treesitter',
         version = 'main',
     },
+    { src = 'MeanderingProgrammer/render-markdown.nvim' },
     { src = 'mtdl9/vim-log-highlighting' },
     { src = 'm00qek/baleia.nvim', version = 'v1.4.0' },
     {
@@ -92,4 +93,4 @@ local plugins = {
 vim.cmd("packadd! nvim.undotree")
 vim.cmd("packadd! nvim.difftool")
 
-_G.setup_plugins(plugins)
+require("core.pack").setup(plugins)

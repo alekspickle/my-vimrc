@@ -11,6 +11,7 @@ require("mini.comment").setup()
 require("mini.files").setup {
     -- options = { use_as_default_explorer = false },
 }
+
 require("mini.completion").setup {
     delay = { completion = 50, info = 50, signature = 20 },
 }
@@ -165,3 +166,30 @@ vim.keymap.set('i', '<Tab>',   [[pumvisible() ? "\<C-n>" : "\<Tab>"]],   { norem
 vim.keymap.set('i', '<S-Tab>', [[pumvisible() ? "\<C-p>" : "\<S-Tab>"]], { noremap = true, expr = true })
 vim.keymap.set('i', '<CR>', [[pumvisible() ? "\<C-y>" : "\<CR>"]], { noremap = true, expr = true })
 
+-- grug-far fo mini.files
+local files_grug_far_replace = function(path)
+    -- works only if cursor is on the valid file system entry
+    local cur_entry_path = MiniFiles.get_fs_entry().path
+    local prefills = { paths = vim.fs.dirname(cur_entry_path) }
+    local grug_far = require "grug-far"
+
+    -- instance check
+    if not grug_far.has_instance "explorer" then
+        grug_far.open {
+            instanceName = "explorer",
+            prefills = prefills,
+            staticTitle = "Find and Replace from Explorer",
+        }
+    else
+        grug_far.get_instance('explorer'):open()
+        -- updating the prefills without crealing the search and other fields
+        grug_far.get_instance('explorer'):update_input_values(prefills, false)
+    end
+end
+
+vim.api.nvim_create_autocmd("User", {
+    pattern = "MiniFilesBufferCreate",
+    callback = function(args)
+        vim.keymap.set("n", "gs", files_grug_far_replace, { buffer = args.data.buf_id, desc = "Search in directory" })
+    end,
+})

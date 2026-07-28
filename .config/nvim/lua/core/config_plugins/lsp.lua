@@ -45,7 +45,7 @@ vim.diagnostic.config({
     update_in_insert = false,
     virtual_text = true,
     signs = true,
-    jump = {float = true},
+    jump = { float = true },
     float = {
         source = 'if_many',
         scope = 'buffer',
