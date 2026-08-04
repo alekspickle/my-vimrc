@@ -112,9 +112,9 @@
       "rev": "6fa6b57cda8459e1e4b2ca34df702f55242f4e4d",
       "src": "https://github.com/mbbill/undotree"
     },
-    "vim-fugitive": {
-      "rev": "3b753cf8c6a4dcde6edee8827d464ba9b8c4a6f0",
-      "src": "https://github.com/tpope/vim-fugitive"
+    "vgit.nvim": {
+      "rev": "7e147e8cb2f160ae3c8d353005666f636d34acb2",
+      "src": "https://github.com/tanvirtin/vgit.nvim"
     },
     "vim-log-highlighting": {
       "rev": "1037e26f3120e6a6a2c0c33b14a84336dee2a78f",

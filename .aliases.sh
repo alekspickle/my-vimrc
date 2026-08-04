@@ -14,6 +14,7 @@ alias eur-usd='curl -s https://api.frankfurter.dev/v2/rate/EUR/USD | jq .rate'
 # network
 alias myip="curl http://ipecho.net/plain; echo"
 alias zerotier="sudo zerotier-cli"
+alias zt="zerotier"
 alias cf="cloudflared"
 
 # ffmpeg

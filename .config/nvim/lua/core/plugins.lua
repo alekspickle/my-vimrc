@@ -27,7 +27,12 @@ local plugins = {
             { src = 'nvim-lua/plenary.nvim' },
         },
     },
-    { src = 'tpope/vim-fugitive' },
+    {
+        src = 'tanvirtin/vgit.nvim',
+        dependencies = {
+            { src = 'nvim-lua/plenary.nvim' },
+        },
+    },
     { src = 'imsnif/kdl.vim' },
     {
         src = 'nvim-treesitter/nvim-treesitter',

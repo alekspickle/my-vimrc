@@ -5,6 +5,8 @@ require("mini.trailspace").setup {}
 require("mini.bracketed").setup {}
 require("mini.pairs").setup {}
 require("mini.icons").setup()
+-- impersonate nvim-web-devicons for plugins that require it (vgit.nvim)
+MiniIcons.mock_nvim_web_devicons()
 require('mini.jump').setup()
 require('mini.jump2d').setup()
 require("mini.comment").setup()
