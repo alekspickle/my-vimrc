@@ -33,6 +33,12 @@ local plugins = {
             { src = 'nvim-lua/plenary.nvim' },
         },
     },
+    {
+        src = 'isakbm/gitgraph.nvim',
+        dependencies = {
+            { src = 'sindrets/diffview.nvim' },
+        },
+    },
     { src = 'imsnif/kdl.vim' },
     {
         src = 'nvim-treesitter/nvim-treesitter',

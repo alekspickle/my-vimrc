@@ -36,8 +36,15 @@ map({ "n", "v" }, "X", '"_X', { desc = "Delete char without yank" })
 -- reselect pasted text
 map("n", "gp", "[v`]", { desc = "Reselect pasted text" })
 
--- Unload current buffer
-map('n', '<leader>d', ":bd<cr>", { desc = "unload current buf"})
+-- Unload current buffer (or close tab if it's a diffview tab)
+map('n', '<leader>d', function()
+    local ok, lib = pcall(require, "diffview.lib")
+    if ok and lib.get_current_view() then
+        vim.cmd("DiffviewClose")
+    else
+        vim.cmd("bd")
+    end
+end, { desc = "unload current buf / close diffview tab"})
 -- map for quick quit, save files using leader key
 map('n', '<Leader>q', ':q<cr>', { desc = "quit" })
 map('n', '<Leader>s', ':w<cr>', m(defaults, { desc = "save" }))

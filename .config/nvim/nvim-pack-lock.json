@@ -13,9 +13,17 @@
       "rev": "21b7561c95cc452c65ddf2fc4dfeb280f8471d45",
       "src": "https://github.com/mistricky/codesnap.nvim"
     },
+    "diffview.nvim": {
+      "rev": "4516612fe98ff56ae0415a259ff6361a89419b0a",
+      "src": "https://github.com/sindrets/diffview.nvim"
+    },
     "gen.nvim": {
       "rev": "c8e1f574d4a3a839dde73a87bdc319a62ee1e559",
       "src": "https://github.com/David-Kunz/gen.nvim"
+    },
+    "gitgraph.nvim": {
+      "rev": "c16daa7d7dd597caf9085644c009cfa80b75db8e",
+      "src": "https://github.com/isakbm/gitgraph.nvim"
     },
     "grug-far.nvim": {
       "rev": "0f6a5d0d7a70659b11bbcd6b3673ee0fe61b6024",

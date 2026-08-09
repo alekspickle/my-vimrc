@@ -7,6 +7,24 @@ vgit.setup({
     },
 })
 
+-- gitgraph.nvim (opens diffview on selected commit)
+local gitgraph = require('gitgraph')
+
+gitgraph.setup({
+    hooks = {
+        on_select_commit = function(commit)
+            vim.cmd('DiffviewOpen ' .. commit.hash .. '^!')
+        end,
+        on_select_range_commit = function(from, to)
+            vim.cmd('DiffviewOpen ' .. from.hash .. '~1..' .. to.hash)
+        end,
+    },
+})
+
+vim.keymap.set('n', '<leader>gg', function()
+    gitgraph.draw({}, { all = true, max_count = 5000 })
+end, { desc = "git graph" })
+
 -- hunks (C-j/C-k taken by move-lines)
 vim.keymap.set('n', ']h', vgit.hunk_down, { desc = "next hunk" })
 vim.keymap.set('n', '[h', vgit.hunk_up, { desc = "prev hunk" })

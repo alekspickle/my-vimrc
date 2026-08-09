@@ -107,6 +107,15 @@ rsync_() {
     sudo rsync -avzh --delete "$@" "${COMMON_EXCLUDES[@]}"
 }
 
+# SCP_RETRY_DELAY=5 scp_retry file.txt user@host:/path/.
+scp_retry() {
+    local delay="${SCP_RETRY_DELAY:-2}"
+    until scp "$@"; do
+        echo "$(date --rfc-3339 seconds): scp failed, retrying in ${delay}s..." >&2
+        sleep "$delay"
+    done
+}
+
 # NMAP
 # This command will perform a stealth SYN scan (-sS) using a decoy list of 10 random IP addresses (-D RND:10)
 # and using your IP address as a source IP address (ME).
@@ -142,6 +151,14 @@ biggest-dirs(){
 
     echo "Analysing disk usage..."
     du -h --max-depth=5 "$search_path" --threshold="$th" | sort -hr | head -n 20
+}
+
+core-loads() {
+    for i in 1 2; do
+        awk '/^cpu[0-9]/{print $1, $5+$6, $2+$3+$4+$5+$6+$7+$8}' /proc/stat > /tmp/cpu$i
+        [ $i -eq 1 ] && sleep 1
+    done
+    paste /tmp/cpu1 /tmp/cpu2 | awk '{tot=$6-$3; idle=$5-$2; printf "%s: %.0f%%\n", $1, 100*(tot-idle)/tot}'
 }
 
 # create install USB from ISO
