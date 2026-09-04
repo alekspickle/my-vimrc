@@ -11,6 +11,9 @@ flatpak update -y
 # update rust, mostly to sync nightly
 rustup update
 
+# zsh
+omz update
+
 # update nvim packages with vim.pack
 nvim --headless -c "lua vim.pack.update()" -c "qa"
 

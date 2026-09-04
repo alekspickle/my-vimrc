@@ -9,6 +9,9 @@ BACKUP_DIR="/var/backups"
 CFG_DIR="$HOME/.config"
 DOT_DIR="$HOME/Documents/dotfiles"
 
+RSYNC_TOTAL_FILES=0
+RSYNC_TRANSFERRED_FILES=0
+
 rsync_ "$HOME"/.local/share/fonts "$HOME"/Documents
 # backup most of the data
 rsync_ "$HOME/Documents/" "$BACKUP_DIR/Documents" --exclude ".git"
@@ -51,5 +54,12 @@ rsync_ "$CFG_DIR"/kglobalshortcutsrc "$DOT_DIR"/.config
 rsync_ "$CFG_DIR"/ksplashrc "$DOT_DIR"/.config
 rsync_ "$CFG_DIR"/dolphinrc "$DOT_DIR"/.config
 rsync_ "$CFG_DIR"/powermanagementprofilesrc "$DOT_DIR"/.config
+
+if [ "$RSYNC_TOTAL_FILES" -gt 0 ]; then
+    percent=$(awk -v t="$RSYNC_TRANSFERRED_FILES" -v a="$RSYNC_TOTAL_FILES" 'BEGIN { printf "%.1f", (t/a)*100 }')
+else
+    percent="0.0"
+fi
+echo "backup done: transferred $RSYNC_TRANSFERRED_FILES/$RSYNC_TOTAL_FILES files ($percent%)"
 
 set +e

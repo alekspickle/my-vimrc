@@ -90,7 +90,7 @@ gobust() {
 }
 
 rsync_() {
-    local COMMON_EXCLUDES
+    local COMMON_EXCLUDES output total transferred
     COMMON_EXCLUDES=(
     "--exclude" "*Camera*"
     "--exclude" "*target*"
@@ -103,8 +103,16 @@ rsync_() {
     "--exclude" "*bb*"
     "--exclude" "*godot*"
     "--exclude" "*pi-linux*"
+    "--exclude" "*lvx"
+    "--exclude" "*log/*"
 )
-    sudo rsync -avzh --delete "$@" "${COMMON_EXCLUDES[@]}"
+    output=$(sudo rsync -avzh --delete --checksum --stats "$@" "${COMMON_EXCLUDES[@]}" | tee /dev/stderr)
+
+    total=$(awk -F': ' '/^Number of files:/ {gsub(/[^0-9]/, "", $2); print $2}' <<< "$output")
+    transferred=$(awk -F': ' '/^Number of regular files transferred:/ {gsub(/[^0-9]/, "", $2); print $2}' <<< "$output")
+
+    RSYNC_TOTAL_FILES=$((RSYNC_TOTAL_FILES + ${total:-0}))
+    RSYNC_TRANSFERRED_FILES=$((RSYNC_TRANSFERRED_FILES + ${transferred:-0}))
 }
 
 # SCP_RETRY_DELAY=5 scp_retry file.txt user@host:/path/.
@@ -159,6 +167,53 @@ core-loads() {
         [ $i -eq 1 ] && sleep 1
     done
     paste /tmp/cpu1 /tmp/cpu2 | awk '{tot=$6-$3; idle=$5-$2; printf "%s: %.0f%%\n", $1, 100*(tot-idle)/tot}'
+}
+
+temps() {
+    local out
+
+    echo "CPU:"
+    if command -v sensors &> /dev/null; then
+        # coretemp (intel) + k10temp (amd)
+        out=$(sensors 2>/dev/null | grep -E "Package id 0|Tctl|Tccd|Tdie|Core [0-9]+:")
+    fi
+    if [ -n "$out" ]; then
+        echo "$out"
+    else
+        # fallback: raw kernel thermal zones, no lm-sensors needed
+        for z in /sys/class/thermal/thermal_zone*; do
+            [ -f "$z/temp" ] || continue
+            awk -v t="$(cat "$z/type" 2>/dev/null)" '{printf "%s: %.1f°C\n", t, $1/1000}' "$z/temp"
+        done
+    fi
+
+    echo "GPU:"
+    out=""
+    if command -v nvidia-smi &> /dev/null; then
+        out+=$(nvidia-smi --query-gpu=name,temperature.gpu --format=csv,noheader,nounits 2>/dev/null | awk -F', ' '{print "nvidia "$1": "$2"°C"}')
+    fi
+    if command -v rocm-smi &> /dev/null; then
+        [ -n "$out" ] && out+=$'\n'
+        out+=$(rocm-smi --showtemp 2>/dev/null | grep -iE "edge|junction|mem")
+    fi
+    if command -v sensors &> /dev/null; then
+        local amd_sensors
+        amd_sensors=$(sensors 2>/dev/null | grep -iE "^amdgpu|edge|junction|mem")
+        if [ -n "$amd_sensors" ]; then
+            [ -n "$out" ] && out+=$'\n'
+            out+="$amd_sensors"
+        fi
+    fi
+    if command -v intel_gpu_top &> /dev/null; then
+        [ -n "$out" ] && out+=$'\n'
+        out+=$(timeout 1 intel_gpu_top -J 2>/dev/null | grep -i -A1 '"temperature"' | grep -i value)
+    fi
+
+    if [ -n "$out" ]; then
+        echo "$out"
+    else
+        echo "no GPU sensor tool found (install nvidia-smi, rocm-smi, or lm-sensors)"
+    fi
 }
 
 # create install USB from ISO
